@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flip & Find Memory Game</title>
+    <style>
+        @media (max-width: 768px) {
+            .card {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 14px !important;
+            }
+        }
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-align: center;
+            background-color: #fdf6e3;
+            margin: 0;
+        }
+        h1 {
+            margin-top: 40px;
+            color: #333;
+            font-size: 36px;
+        }
+        #menu, #game, #result, #leaderboard {
+            display: none;
+            margin-top: 20px;
+        }
+        #menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 70vh;
+        }
+        #menu input, #menu button {
+            font-size: 20px;
+            margin: 10px;
+            padding: 12px 20px;
+            border-radius: 10px;
+        }
+        #game {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+        }
+        .grid {
+            display: grid;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px;
+        }
+        .card {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            color: white;
+            background-color: #8B4513;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        .card:hover {
+            background-color: #ffc0cb !important;
+        }
+        .color-1 { background-color: red; }
+        .color-2 { background-color: orange; }
+        .color-3 { background-color: yellow; color: black; }
+        .color-4 { background-color: green; }
+        .color-5 { background-color: cyan; color: black; }
+        .color-6 { background-color: blue; }
+        .color-7 { background-color: purple; }
+        .color-8 { background-color: pink; color: black; }
+        .confirm-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff3cd;
+            border: 2px solid #ffcc00;
+            padding: 20px;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .confirm-box button {
+            margin: 10px;
+            padding: 8px 16px;
+            font-size: 16px;
+        }
+        #sidebar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        .circle-button {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ccc;
+            text-align: center;
+            line-height: 40px;
+            font-size: 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .popup-box {
+            display: none;
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            background-color: #fff8dc;
+            border: 2px dashed #ffa07a;
+            padding: 15px;
+            width: 250px;
+            z-index: 100;
+        }
+            #sidebar {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            z-index: 999;
+        }
+
+        .circle-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            text-align: center;
+            line-height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .popup-box {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            background-color: #fff8dc;
+            border: 2px dashed #ffa07a;
+            padding: 10px;
+            z-index: 1000;
+            width: 220px;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .toggle-switch input[type="checkbox"] {
+            appearance: none;
+            width: 40px;
+            height: 20px;
+            background: #ccc;
+            border-radius: 20px;
+            position: relative;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .toggle-switch input[type="checkbox"]:checked {
+            background: #444;
+        }
+
+        .toggle-switch input[type="checkbox"]::before {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input[type="checkbox"]:checked::before {
+            transform: translateX(20px);
+        }
+</style>
+<div id="sidebar">
+    <div class="circle-button" onclick="togglePopup('helpPopup')">❓</div>
+    <div class="circle-button" onclick="togglePopup('langPopup')">🌐</div>
+    <div class="circle-button" onclick="togglePopup('settingsPopup')">⚙️</div>
+</div>
+<div id="helpPopup" class="popup-box">
+    <b>How to Play</b>
+    <p>Click two cards to flip and match them. Match all before time runs out!</p>
+</div>
+<div id="langPopup" class="popup-box">
+    <b>Select Language</b><br>
+    <button onclick="switchLanguage('English')">EN</button>
+    <button onclick="switchLanguage('中文')">中</button>
+    <button onclick="switchLanguage('Deutsch')">DE</button>
+    <button onclick="switchLanguage('Français')">FR</button>
+    <button onclick="switchLanguage('日本語')">JP</button>
+    <button onclick="switchLanguage('한국어')">KR</button>
+</div>
+<div id="settingsPopup" class="popup-box">
+    <b>Settings</b>
+    <div class="toggle-switch">
+        <label for="darkmode">Night Mode</label>
+        <input type="checkbox" id="darkmode" onchange="toggleDarkMode()" />
+    </div>
+</div>
+</head>
+<body onclick="closeAllPopups()">
+
+    
+    <div id="help" class="popup-box">
+        <p><b>How to Play:</b></p>
+        <p>Click two cards to find a match. Match all pairs before time runs out!</p>
+    </div>
+    <div id="lang" class="popup-box">
+        <p><b>Select Language:</b></p>
+        <p>English / 中文 / Deutsch / Français / 日本語 / 한국어</p>
+    </div>
+    <div id="settings" class="popup-box">
+        <p><b>Settings:</b></p>
+        <p>(Audio settings coming soon)</p>
+    </div>
+</div>
+<h1>Flip & Find Memory Game</h1>
+<!-- 遊戲核心內容與邏輯 -->
+<div id="menu">
+    <input id="username" placeholder="Enter your name" />
+    <p>Select difficulty:</p>
+    <div>
+        <button onclick="startGame(4)">4x4</button>
+        <button onclick="startGame(6)">6x6</button>
+        <button onclick="startGame(8)">8x8</button>
+        <button onclick="startGame(10)">10x10</button>
+        <button onclick="startGame(12)">12x12</button>
+        <button onclick="startGame(16)">16x16</button>
+        <button onclick="startGame(18)">18x18</button>
+        <button onclick="startGame(20)">20x20</button>
+        <button onclick="startGame(24)">24x24</button>
+    </div>
+    <button onclick="showLeaderboard()">Leaderboard</button>
+</div>
+
+<div id="game">
+    <h3 id="timer">Time left: 180 seconds</h3>
+    <div id="board" class="grid"></div>
+    <div>
+        <button onclick="confirmBackToMenu()">🔙 Main Menu</button>
+        <button onclick="confirmGiveUp()">❌ Give Up</button>
+    </div>
+</div>
+
+<div id="result">
+    <h2 id="resultText"></h2>
+    <div id="resultOptions"></div>
+</div>
+
+<div id="leaderboard">
+    <h2>🏆 Leaderboard</h2>
+    <ol id="scoreList"></ol>
+    <button onclick="backToMenu()">🔙 Main Menu</button>
+</div>
+
+<div id="confirmDialog" class="confirm-box" style="display:none;">
+    <p id="confirmText"></p>
+    <button onclick="handleConfirm(true)">Yes</button>
+    <button onclick="handleConfirm(false)">Cancel</button>
+</div>
+
+<script>
+let gridSize, board, values, flipped, matched, timer, timeLeft, username;
+let confirmAction = null;
+const colorMap = ["color-1", "color-2", "color-3", "color-4", "color-5", "color-6", "color-7", "color-8"];
+
+function getTimeByGrid(size) {
+    if (size <= 4) return 120;
+    if (size <= 8) return 180;
+    if (size <= 12) return 300;
+    if (size <= 16) return 420;
+    if (size <= 20) return 600;
+    return 720; // 24x24
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function showMenu() {
+    document.getElementById("menu").style.display = "flex";
+    document.getElementById("game").style.display = "none";
+    document.getElementById("result").style.display = "none";
+    document.getElementById("leaderboard").style.display = "none";
+}
+
+function startGame(size) {
+    username = document.getElementById("username").value || "Player";
+    gridSize = size;
+    let total = size * size / 2;
+    values = [];
+    for (let i = 1; i <= total; i++) values.push(i, i);
+    shuffle(values);
+    flipped = [];
+    matched = [];
+    timeLeft = getTimeByGrid(size);
+
+    const boardEl = document.getElementById("board");
+    boardEl.innerHTML = "";
+    const cardSize = size >= 20 ? 28 : 40;
+    boardEl.style.gridTemplateColumns = `repeat(${size}, ${cardSize}px)`;
+    values.forEach((val, idx) => {
+        let btn = document.createElement("button");
+        btn.className = "card";
+        btn.style.width = btn.style.height = size >= 20 ? '28px' : '40px';
+        btn.style.fontSize = size >= 20 ? '14px' : '18px';
+        btn.dataset.index = idx;
+        btn.onclick = () => flipCard(btn, idx);
+        boardEl.appendChild(btn);
+    });
+
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("game").style.display = "flex";
+    document.getElementById("result").style.display = "none";
+    updateTimer();
+}
+
+function flipCard(btn, idx) {
+    if (matched.includes(idx) || flipped.includes(idx)) return;
+    const val = values[idx];
+    btn.textContent = val;
+    btn.classList.add(colorMap[(val - 1) % colorMap.length]);
+    flipped.push(idx);
+    if (flipped.length === 2) {
+        setTimeout(() => checkMatch(), 500);
+    }
+}
+
+function checkMatch() {
+    const [i1, i2] = flipped;
+    const val1 = values[i1], val2 = values[i2];
+    const cards = document.getElementsByClassName("card");
+    if (val1 === val2) {
+        matched.push(i1, i2);
+        if (matched.length === values.length) {
+            endGame(true);
+        }
+    } else {
+        for (let i of flipped) {
+            cards[i].textContent = "";
+            cards[i].className = "card";
+        }
+    }
+    flipped = [];
+}
+
+function updateTimer() {
+    document.getElementById("timer").textContent = `Time left: ${timeLeft} seconds`;
+    if (timeLeft === 0) return endGame(false);
+    timeLeft--;
+    timer = setTimeout(updateTimer, 1000);
+}
+
+function endGame(success) {
+    clearTimeout(timer);
+    document.getElementById("game").style.display = "none";
+    document.getElementById("result").style.display = "block";
+    const resultText = document.getElementById("resultText");
+    const resultOptions = document.getElementById("resultOptions");
+    resultOptions.innerHTML = "";
+
+    if (success) {
+        resultText.textContent = `🎉 ${username} completed the game!`;
+        saveScore(username, 1000 + timeLeft * 5 - matched.length * 2);
+        resultOptions.innerHTML = `
+            <button onclick="restartGame()">🔁 Play Again</button>
+            <button onclick="backToMenu()">🔙 Main Menu</button>
+        `;
+    } else {
+        resultText.textContent = `⏰ ${username} time is up!`;
+        resultOptions.innerHTML = `
+            <button onclick="addMoreTime()">➕ Add 1 Minute</button>
+            <button onclick="confirmBackToMenu()">❌ Give Up</button>
+        `;
+    }
+}
+
+function confirmBackToMenu() {
+    confirmAction = () => backToMenu();
+    showConfirm("Are you sure you want to return to the main menu?");
+}
+
+function confirmGiveUp() {
+    confirmAction = () => backToMenu();
+    showConfirm("Are you sure you want to quit the game?");
+}
+
+function showConfirm(message) {
+    document.getElementById("confirmText").textContent = message;
+    document.getElementById("confirmDialog").style.display = "block";
+}
+
+function handleConfirm(ok) {
+    document.getElementById("confirmDialog").style.display = "none";
+    if (ok && confirmAction) confirmAction();
+}
+
+function addMoreTime() {
+    timeLeft = 60;
+    document.getElementById("result").style.display = "none";
+    document.getElementById("game").style.display = "flex";
+    updateTimer();
+}
+
+function saveScore(name, score) {
+    let scores = JSON.parse(localStorage.getItem("memoryScores") || "[]");
+    scores.push({ name, score });
+    scores.sort((a, b) => b.score - a.score);
+    scores = scores.slice(0, 10);
+    localStorage.setItem("memoryScores", JSON.stringify(scores));
+}
+
+function showLeaderboard() {
+    const list = document.getElementById("scoreList");
+    list.innerHTML = "";
+    const scores = JSON.parse(localStorage.getItem("memoryScores") || "[]");
+    scores.forEach((s) => {
+        const item = document.createElement("li");
+        item.textContent = `${s.name} - ${s.score} pts`;
+        list.appendChild(item);
+    });
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("leaderboard").style.display = "block";
+}
+
+function backToMenu() {
+    showMenu();
+
+function applyLanguageSwitcher() {
+    const options = ['English', '中文', 'Deutsch', 'Français', '日本語', '한국어'];
+    const langBox = document.getElementById('lang');
+    langBox.innerHTML = '<p><b>Select Language:</b></p>';
+    options.forEach(option => {
+        const btn = document.createElement('button');
+        btn.textContent = option;
+        btn.style.margin = '4px';
+        btn.onclick = () => switchLanguage(option);
+        langBox.appendChild(btn);
+    });
+}
+
+function switchLanguage(lang) {
+    const translations = {
+        'English': {
+            title: 'Flip & Find Memory Game',
+            enterName: 'Enter your name',
+            selectDifficulty: 'Select difficulty:',
+            leaderboard: 'Leaderboard',
+            mainMenu: 'Main Menu',
+            giveUp: 'Give Up',
+            addTime: 'Add 1 Minute'
+        },
+        '中文': {
+            title: '翻牌記憶遊戲',
+            enterName: '請輸入你的名字',
+            selectDifficulty: '選擇難度：',
+            leaderboard: '排行榜',
+            mainMenu: '主選單',
+            giveUp: '放棄',
+            addTime: '加 1 分鐘'
+        },
+        'Deutsch': {
+            title: 'Paare Finden Spiel',
+            enterName: 'Gib deinen Namen ein',
+            selectDifficulty: 'Wähle Schwierigkeitsgrad:',
+            leaderboard: 'Bestenliste',
+            mainMenu: 'Hauptmenü',
+            giveUp: 'Aufgeben',
+            addTime: '1 Minute hinzufügen'
+        },
+        'Français': {
+            title: 'Jeu de Mémoire',
+            enterName: 'Entrez votre nom',
+            selectDifficulty: 'Sélectionnez la difficulté :',
+            leaderboard: 'Classement',
+            mainMenu: 'Menu Principal',
+            giveUp: 'Abandonner',
+            addTime: 'Ajouter 1 minute'
+        },
+        '日本語': {
+            title: '神経衰弱ゲーム',
+            enterName: '名前を入力してください',
+            selectDifficulty: '難易度を選択：',
+            leaderboard: 'ランキング',
+            mainMenu: 'メインメニュー',
+            giveUp: 'ギブアップ',
+            addTime: '1分追加'
+        },
+        '한국어': {
+            title: '카드 짝맞추기 게임',
+            enterName: '이름을 입력하세요',
+            selectDifficulty: '난이도 선택:',
+            leaderboard: '리더보드',
+            mainMenu: '메인 메뉴',
+            giveUp: '포기',
+            addTime: '1분 추가'
+        }
+    };
+
+    const t = translations[lang];
+    if (!t) return;
+    document.querySelector('h1').textContent = t.title;
+    document.getElementById('username').placeholder = t.enterName;
+    document.querySelector('#menu p').textContent = t.selectDifficulty;
+    document.querySelector('#menu button:last-of-type').textContent = t.leaderboard;
+    document.querySelectorAll('#game button')[0].textContent = `🔙 ${t.mainMenu}`;
+    document.querySelectorAll('#game button')[1].textContent = `❌ ${t.giveUp}`;
+    document.querySelector('#resultOptions').innerHTML = `
+        <button onclick="addMoreTime()">➕ ${t.addTime}</button>
+        <button onclick="confirmBackToMenu()">❌ ${t.giveUp}</button>
+    `;
+}
+}
+
+function restartGame() {
+    startGame(gridSize);
+}
+
+function hidePopups() {
+    document.getElementById('help').style.display = 'none';
+    document.getElementById('lang').style.display = 'none';
+    document.getElementById('settings').style.display = 'none';
+}
+
+function showPopup(id) {
+    event.stopPropagation();
+    document.querySelectorAll('.popup-box').forEach(el => el.style.display = 'none');
+    const box = document.getElementById(id);
+    if (box) box.style.display = 'block';
+    if (id === 'lang') applyLanguageSwitcher();
+}
+
+showMenu();
+function togglePopup(id) {
+    event.stopPropagation();
+    closeAllPopups();
+    const box = document.getElementById(id);
+    if (box) box.style.display = 'block';
+}
+
+function closeAllPopups() {
+    document.querySelectorAll('.popup-box').forEach(el => el.style.display = 'none');
+}
+
+function toggleDarkMode() {
+    const dark = document.getElementById('darkmode').checked;
+
+    const bg = getComputedStyle(document.body).backgroundColor;
+    const fg = getComputedStyle(document.body).color;
+
+    // 反轉主體背景與文字顏色
+    document.body.style.backgroundColor = fg;
+    document.body.style.color = bg;
+
+    // 反轉卡片顏色
+    document.querySelectorAll('.card').forEach(card => {
+        const currentBg = getComputedStyle(card).backgroundColor;
+        const currentColor = getComputedStyle(card).color;
+        card.style.backgroundColor = currentColor;
+        card.style.color = currentBg;
+    });
+}
+
+</script>
+</body>
+</html>
